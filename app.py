@@ -3,7 +3,7 @@ import pandas as pd
 
 st.title("Stroke Dataset Dashboard")
 
-df = pd.read_csv("Uncleaned_Data_Set.csv")
+df = pd.read_csv("/content/Cleaned_DataSet_Stroke.csv")
 
 st.subheader("Dataset Preview")
 st.dataframe(df.head())
