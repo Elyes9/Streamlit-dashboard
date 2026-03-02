@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import seaborn as sns
+import seaborn  
 import matplotlib.pyplot as plt
 
 st.title("Stroke Dataset Dashboard")
@@ -18,6 +18,6 @@ st.subheader("Correlation Heatmap")
 numeric_df = df.select_dtypes(include=["int64","float64"])
 
 fig, ax = plt.subplots()
-sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", ax=ax)
+seaborn.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", ax=ax)
 
 st.pyplot(fig)
