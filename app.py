@@ -1,118 +1,195 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
 
-# Page configuration
-st.set_page_config(page_title="Stroke Risk Dashboard", layout="wide")
+# -------------------------
+# PAGE CONFIG
+# -------------------------
+st.set_page_config(
+    page_title="Stroke Data Dashboard",
+    page_icon="📊",
+    layout="wide"
+)
 
-# Title
-st.title("🧠 Stroke Risk Analysis Dashboard")
+st.title("📊 Stroke Dataset Analysis Dashboard")
+st.markdown("Interactive exploration of stroke dataset")
 
-# Load data
+# -------------------------
+# LOAD DATA
+# -------------------------
 df = pd.read_csv("Cleaned_DataSet_Stroke.csv")
 
-# Sidebar filters
-st.sidebar.header("Filter Data")
+# -------------------------
+# SIDEBAR FILTERS
+# -------------------------
+st.sidebar.header("Filters")
 
-gender = st.sidebar.selectbox("Gender", ["All"] + list(df["gender"].unique()))
-smoking = st.sidebar.selectbox("Smoking Status", ["All"] + list(df["smoking_status"].unique()))
-work = st.sidebar.selectbox("Work Type", ["All"] + list(df["work_type"].unique()))
+gender = st.sidebar.multiselect(
+    "Select Gender",
+    options=df["gender"].unique(),
+    default=df["gender"].unique()
+)
 
-filtered_df = df.copy()
+df = df[df["gender"].isin(gender)]
 
-if gender != "All":
-    filtered_df = filtered_df[filtered_df["gender"] == gender]
-
-if smoking != "All":
-    filtered_df = filtered_df[filtered_df["smoking_status"] == smoking]
-
-if work != "All":
-    filtered_df = filtered_df[filtered_df["work_type"] == work]
-
-# =========================
-# KPI METRICS
-# =========================
-
-st.subheader("Key Indicators")
-
+# -------------------------
+# METRICS
+# -------------------------
 col1, col2, col3, col4 = st.columns(4)
 
-col1.metric("Total Patients", len(filtered_df))
-col2.metric("Average Age", round(filtered_df["age"].mean(),1))
-col3.metric("Average BMI", round(filtered_df["bmi"].mean(),1))
-col4.metric("Stroke Cases", int(filtered_df["stroke"].sum()))
+col1.metric("Total Patients", len(df))
+col2.metric("Average Age", round(df["age"].mean(),1))
+col3.metric("Average BMI", round(df["bmi"].mean(),1))
+col4.metric("Stroke Cases", int(df["stroke"].sum()))
 
-# =========================
-# CHARTS
-# =========================
+st.divider()
 
-st.subheader("Data Visualizations")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.write("Stroke Distribution")
-    st.bar_chart(filtered_df["stroke"].value_counts())
-
-with col2:
-    st.write("Gender Distribution")
-    st.bar_chart(filtered_df["gender"].value_counts())
-
-# Age distribution
+# -------------------------
+# AGE DISTRIBUTION
+# -------------------------
 st.subheader("Age Distribution")
-st.line_chart(filtered_df["age"])
 
-# BMI distribution
+fig = px.histogram(
+    df,
+    x="age",
+    nbins=30,
+    title="Age Distribution of Patients"
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------
+# BMI DISTRIBUTION
+# -------------------------
 st.subheader("BMI Distribution")
-st.line_chart(filtered_df["bmi"].dropna())
 
-# Glucose levels
-st.subheader("Average Glucose Level")
-st.line_chart(filtered_df["avg_glucose_level"])
+fig = px.histogram(
+    df,
+    x="bmi",
+    nbins=30,
+    title="BMI Distribution"
+)
 
-# Hypertension vs Stroke
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------
+# GENDER DISTRIBUTION
+# -------------------------
+st.subheader("Gender Distribution")
+
+fig = px.pie(
+    df,
+    names="gender",
+    title="Gender Proportion"
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------
+# HYPERTENSION VS STROKE
+# -------------------------
 st.subheader("Hypertension vs Stroke")
-st.bar_chart(pd.crosstab(filtered_df["hypertension"], filtered_df["stroke"]))
 
-# Heart disease vs Stroke
+fig = px.bar(
+    df,
+    x="hypertension",
+    color="stroke",
+    title="Hypertension and Stroke Relationship"
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------
+# HEART DISEASE VS STROKE
+# -------------------------
 st.subheader("Heart Disease vs Stroke")
-st.bar_chart(pd.crosstab(filtered_df["heart_disease"], filtered_df["stroke"]))
 
-# Smoking status
-st.subheader("Smoking Status Distribution")
-st.bar_chart(filtered_df["smoking_status"].value_counts())
+fig = px.bar(
+    df,
+    x="heart_disease",
+    color="stroke",
+    title="Heart Disease and Stroke"
+)
 
-# =========================
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------
+# WORK TYPE DISTRIBUTION
+# -------------------------
+st.subheader("Work Type Distribution")
+
+fig = px.histogram(
+    df,
+    x="work_type",
+    color="stroke",
+    title="Work Type vs Stroke"
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------
+# SMOKING STATUS
+# -------------------------
+st.subheader("Smoking Status")
+
+fig = px.histogram(
+    df,
+    x="smoking_status",
+    color="stroke",
+    title="Smoking Status vs Stroke"
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------
+# GLUCOSE VS AGE
+# -------------------------
+st.subheader("Glucose Level vs Age")
+
+fig = px.scatter(
+    df,
+    x="age",
+    y="avg_glucose_level",
+    color="stroke",
+    title="Age vs Glucose Level"
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------
+# BMI VS AGE
+# -------------------------
+st.subheader("BMI vs Age")
+
+fig = px.scatter(
+    df,
+    x="age",
+    y="bmi",
+    color="stroke",
+    title="Age vs BMI"
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------
 # CORRELATION MATRIX
-# =========================
-
+# -------------------------
 st.subheader("Correlation Matrix")
 
-numeric_df = filtered_df.select_dtypes(include=["int64","float64"])
-corr = numeric_df.corr()
+corr = df.corr(numeric_only=True)
 
-st.dataframe(corr)
+fig = px.imshow(
+    corr,
+    text_auto=True,
+    title="Feature Correlation Matrix"
+)
 
-# =========================
-# STROKE RISK ANALYSIS
-# =========================
+st.plotly_chart(fig, use_container_width=True)
 
-st.subheader("Stroke Risk Analysis")
-
-age_bins = pd.cut(filtered_df["age"], bins=5)
-
-risk_by_age = filtered_df.groupby(age_bins)["stroke"].mean().reset_index()
-
-risk_by_age.columns = ["Age Group", "Stroke Risk"]
-
-st.write("Stroke Probability by Age Group")
-st.bar_chart(risk_by_age.set_index("Age Group"))
-risk_by_age = filtered_df.groupby(age_bins, observed=False)["stroke"].mean().reset_index()
-
-# =========================
+# -------------------------
 # DATA PREVIEW
-# =========================
-
+# -------------------------
 st.subheader("Dataset Preview")
 
-st.dataframe(filtered_df.head(20))
+st.dataframe(df.head(20))
