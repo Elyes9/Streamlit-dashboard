@@ -99,10 +99,15 @@ st.dataframe(corr)
 
 st.subheader("Stroke Risk Analysis")
 
-risk_by_age = filtered_df.groupby(pd.cut(filtered_df["age"], bins=5))["stroke"].mean()
+age_bins = pd.cut(filtered_df["age"], bins=5)
+
+risk_by_age = filtered_df.groupby(age_bins)["stroke"].mean().reset_index()
+
+risk_by_age.columns = ["Age Group", "Stroke Risk"]
 
 st.write("Stroke Probability by Age Group")
-st.bar_chart(risk_by_age)
+st.bar_chart(risk_by_age.set_index("Age Group"))
+risk_by_age = filtered_df.groupby(age_bins, observed=False)["stroke"].mean().reset_index()
 
 # =========================
 # DATA PREVIEW
