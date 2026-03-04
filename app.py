@@ -3,16 +3,19 @@ import pandas as pd
 import numpy as np
 
 # Page configuration
-st.set_page_config(page_title="Stroke Risk Dashboard", layout="wide")
+st.set_page_config(page_title="Stroke Dashboard", layout="wide")
 
 # Title
-st.title("🧠 Stroke Risk Analysis Dashboard")
+st.title("🧠 Stroke Dataset Dashboard")
 
 # Load data
 df = pd.read_csv("Cleaned_DataSet_Stroke.csv")
 
-# Sidebar filters
-st.sidebar.header("Filter Data")
+# =========================
+# SIDEBAR FILTERS
+# =========================
+
+st.sidebar.header("Filters")
 
 gender = st.sidebar.selectbox("Gender", ["All"] + list(df["gender"].unique()))
 smoking = st.sidebar.selectbox("Smoking Status", ["All"] + list(df["smoking_status"].unique()))
@@ -43,10 +46,10 @@ col3.metric("Average BMI", round(filtered_df["bmi"].mean(),1))
 col4.metric("Stroke Cases", int(filtered_df["stroke"].sum()))
 
 # =========================
-# CHARTS
+# BASIC CHARTS
 # =========================
 
-st.subheader("Data Visualizations")
+st.subheader("Dataset Overview")
 
 col1, col2 = st.columns(2)
 
@@ -58,28 +61,53 @@ with col2:
     st.write("Gender Distribution")
     st.bar_chart(filtered_df["gender"].value_counts())
 
-# Age distribution
-st.subheader("Age Distribution")
-st.line_chart(filtered_df["age"])
+# =========================
+# HISTOGRAMS
+# =========================
 
-# BMI distribution
-st.subheader("BMI Distribution")
-st.line_chart(filtered_df["bmi"].dropna())
+st.subheader("Histograms")
 
-# Glucose levels
-st.subheader("Average Glucose Level")
-st.line_chart(filtered_df["avg_glucose_level"])
+col1, col2, col3 = st.columns(3)
 
-# Hypertension vs Stroke
-st.subheader("Hypertension vs Stroke")
-st.bar_chart(pd.crosstab(filtered_df["hypertension"], filtered_df["stroke"]))
+# AGE HISTOGRAM
+with col1:
+    st.write("Age Distribution")
+    hist_values = np.histogram(filtered_df["age"], bins=20)[0]
+    st.bar_chart(hist_values)
 
-# Heart disease vs Stroke
-st.subheader("Heart Disease vs Stroke")
-st.bar_chart(pd.crosstab(filtered_df["heart_disease"], filtered_df["stroke"]))
+# BMI HISTOGRAM
+with col2:
+    st.write("BMI Distribution")
+    hist_values = np.histogram(filtered_df["bmi"].dropna(), bins=20)[0]
+    st.bar_chart(hist_values)
 
-# Smoking status
-st.subheader("Smoking Status Distribution")
+# GLUCOSE HISTOGRAM
+with col3:
+    st.write("Glucose Level Distribution")
+    hist_values = np.histogram(filtered_df["avg_glucose_level"], bins=20)[0]
+    st.bar_chart(hist_values)
+
+# =========================
+# HEALTH ANALYSIS
+# =========================
+
+st.subheader("Health Factors")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.write("Hypertension vs Stroke")
+    st.bar_chart(pd.crosstab(filtered_df["hypertension"], filtered_df["stroke"]))
+
+with col2:
+    st.write("Heart Disease vs Stroke")
+    st.bar_chart(pd.crosstab(filtered_df["heart_disease"], filtered_df["stroke"]))
+
+# =========================
+# SMOKING STATUS
+# =========================
+
+st.subheader("Smoking Status")
 st.bar_chart(filtered_df["smoking_status"].value_counts())
 
 # =========================
@@ -94,20 +122,8 @@ corr = numeric_df.corr()
 st.dataframe(corr)
 
 # =========================
-# STROKE RISK ANALYSIS
-# =========================
-
-st.subheader("Stroke Risk Analysis")
-
-risk_by_age = filtered_df.groupby(pd.cut(filtered_df["age"], bins=5))["stroke"].mean()
-
-st.write("Stroke Probability by Age Group")
-st.bar_chart(risk_by_age)
-
-# =========================
 # DATA PREVIEW
 # =========================
 
 st.subheader("Dataset Preview")
-
 st.dataframe(filtered_df.head(20))
