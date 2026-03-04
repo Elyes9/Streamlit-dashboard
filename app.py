@@ -8,8 +8,45 @@ import numpy as np
 
 st.set_page_config(page_title="Stroke Dashboard", layout="wide")
 
-st.title("🧠 Stroke Dataset Dashboard")
-st.write("Interactive dashboard for exploring the stroke dataset")
+# -------------------------------------------------
+# CUSTOM STYLE
+# -------------------------------------------------
+
+st.markdown("""
+<style>
+
+.main {
+    background-color: #0E1117;
+}
+
+h1, h2, h3 {
+    color: #4CAF50;
+}
+
+[data-testid="metric-container"] {
+    background-color: #1c1f26;
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid #2d3139;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------------------------------
+# TITLE
+# -------------------------------------------------
+
+st.markdown("""
+<h1 style='text-align: center;'>
+🧠 Stroke Dataset Analysis Dashboard
+</h1>
+<p style='text-align: center; font-size:18px;'>
+Interactive dashboard for exploring stroke dataset characteristics
+</p>
+""", unsafe_allow_html=True)
+
+st.markdown("---")
 
 # -------------------------------------------------
 # LOAD DATA
@@ -61,7 +98,7 @@ filtered_df = filtered_df[
 # KPI METRICS
 # -------------------------------------------------
 
-st.subheader("Key Indicators")
+st.markdown("## 📌 Key Indicators")
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -70,11 +107,13 @@ col2.metric("Average Age", round(filtered_df["age"].mean(),1))
 col3.metric("Average BMI", round(filtered_df["bmi"].mean(),1))
 col4.metric("Stroke Cases", int(filtered_df["stroke"].sum()))
 
+st.markdown("---")
+
 # -------------------------------------------------
 # CATEGORY DISTRIBUTIONS
 # -------------------------------------------------
 
-st.subheader("Population Overview")
+st.markdown("## 📊 Population Overview")
 
 col1, col2, col3 = st.columns(3)
 
@@ -90,20 +129,22 @@ with col3:
     st.write("Work Type")
     st.bar_chart(filtered_df["work_type"].value_counts())
 
+st.markdown("---")
+
 # -------------------------------------------------
-# HISTOGRAM FUNCTION (CORRECT X AND Y)
+# HISTOGRAM FUNCTION
 # -------------------------------------------------
 
-def histogram_chart(data, column, bins=20):
+def histogram_chart(data, bins=20):
 
     hist, bin_edges = np.histogram(data.dropna(), bins=bins)
 
     histogram_df = pd.DataFrame({
-        "bin_start": bin_edges[:-1],
-        "count": hist
+        "Value": bin_edges[:-1],
+        "Frequency": hist
     })
 
-    histogram_df = histogram_df.set_index("bin_start")
+    histogram_df = histogram_df.set_index("Value")
 
     st.bar_chart(histogram_df)
 
@@ -111,27 +152,29 @@ def histogram_chart(data, column, bins=20):
 # HISTOGRAMS
 # -------------------------------------------------
 
-st.subheader("Health Metrics Distribution")
+st.markdown("## 🏥 Health Metrics Distribution")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
     st.write("Age Distribution")
-    histogram_chart(filtered_df["age"], "age")
+    histogram_chart(filtered_df["age"])
 
 with col2:
     st.write("BMI Distribution")
-    histogram_chart(filtered_df["bmi"], "bmi")
+    histogram_chart(filtered_df["bmi"])
 
 with col3:
     st.write("Glucose Level Distribution")
-    histogram_chart(filtered_df["avg_glucose_level"], "avg_glucose_level")
+    histogram_chart(filtered_df["avg_glucose_level"])
+
+st.markdown("---")
 
 # -------------------------------------------------
 # HEALTH FACTORS
 # -------------------------------------------------
 
-st.subheader("Health Risk Factors")
+st.markdown("## ❤️ Health Risk Factors")
 
 col1, col2 = st.columns(2)
 
@@ -143,31 +186,37 @@ with col2:
     st.write("Heart Disease vs Stroke")
     st.bar_chart(pd.crosstab(filtered_df["heart_disease"], filtered_df["stroke"]))
 
+st.markdown("---")
+
 # -------------------------------------------------
 # AGE VS GLUCOSE
 # -------------------------------------------------
 
-st.subheader("Average Glucose by Age")
+st.markdown("## 📈 Average Glucose by Age")
 
 age_glucose = filtered_df.groupby("age")["avg_glucose_level"].mean()
 
 st.line_chart(age_glucose)
 
+st.markdown("---")
+
 # -------------------------------------------------
 # CORRELATION MATRIX
 # -------------------------------------------------
 
-st.subheader("Correlation Matrix")
+st.markdown("## 🔗 Correlation Matrix")
 
 numeric_df = filtered_df.select_dtypes(include=["int64","float64"])
 corr = numeric_df.corr()
 
 st.dataframe(corr)
 
+st.markdown("---")
+
 # -------------------------------------------------
 # DATA PREVIEW
 # -------------------------------------------------
 
-st.subheader("Dataset Preview")
+st.markdown("## 🔎 Dataset Preview")
 
 st.dataframe(filtered_df.head(20))
