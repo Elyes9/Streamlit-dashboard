@@ -15,30 +15,19 @@ st.set_page_config(page_title="Stroke Dashboard", layout="wide")
 st.markdown("""
 <style>
 
-.stApp {
-    background: linear-gradient(120deg,#0f2027,#203a43,#2c5364);
+.main {
+    background-color: #0E1117;
 }
 
-h1 {
-    text-align:center;
-    color:#00E5FF;
-    font-size:48px;
-}
-
-h2, h3 {
-    color:#FFD54F;
+h1, h2, h3 {
+    color: #4CAF50;
 }
 
 [data-testid="metric-container"] {
-    background: linear-gradient(145deg,#1f4037,#99f2c8);
-    border-radius:12px;
-    padding:18px;
-    color:black;
-    font-weight:bold;
-}
-
-.css-1d391kg {
-    background-color:#111827;
+    background-color: #1c1f26;
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid #2d3139;
 }
 
 </style>
@@ -49,8 +38,10 @@ h2, h3 {
 # -------------------------------------------------
 
 st.markdown("""
-<h1>🧠 Stroke Dataset Analysis Dashboard</h1>
-<p style='text-align:center; font-size:18px; color:white;'>
+<h1 style='text-align: center;'>
+🧠 Stroke Dataset Analysis Dashboard
+</h1>
+<p style='text-align: center; font-size:18px;'>
 Interactive dashboard for exploring stroke dataset characteristics
 </p>
 """, unsafe_allow_html=True)
@@ -107,7 +98,7 @@ filtered_df = filtered_df[
 # KPI METRICS
 # -------------------------------------------------
 
-st.markdown("## 📊 Key Indicators")
+st.markdown("## 📌 Key Indicators")
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -122,7 +113,7 @@ st.markdown("---")
 # CATEGORY DISTRIBUTIONS
 # -------------------------------------------------
 
-st.markdown("## 👥 Population Overview")
+st.markdown("## 📊 Population Overview")
 
 col1, col2, col3 = st.columns(3)
 
@@ -161,7 +152,7 @@ def histogram_chart(data, bins=20):
 # HISTOGRAMS
 # -------------------------------------------------
 
-st.markdown("## 📈 Health Metrics Distribution")
+st.markdown("## 🏥 Health Metrics Distribution")
 
 col1, col2, col3 = st.columns(3)
 
@@ -201,7 +192,7 @@ st.markdown("---")
 # AGE VS GLUCOSE
 # -------------------------------------------------
 
-st.markdown("## 📉 Average Glucose by Age")
+st.markdown("## 📈 Average Glucose by Age")
 
 age_glucose = filtered_df.groupby("age")["avg_glucose_level"].mean()
 
@@ -226,6 +217,6 @@ st.markdown("---")
 # DATA PREVIEW
 # -------------------------------------------------
 
-st.markdown("## 🔍 Dataset Preview")
+st.markdown("## 🔎 Dataset Preview")
 
 st.dataframe(filtered_df.head(20))
