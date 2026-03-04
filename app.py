@@ -64,29 +64,36 @@ with col2:
 # =========================
 # HISTOGRAMS
 # =========================
-
-st.subheader("Histograms")
+st.subheader("Health Metrics Distribution")
 
 col1, col2, col3 = st.columns(3)
 
 # AGE HISTOGRAM
 with col1:
-    st.write("Age Distribution")
-    hist_values = np.histogram(filtered_df["age"], bins=20)[0]
-    st.bar_chart(hist_values)
+    fig, ax = plt.subplots()
+    ax.hist(filtered_df["age"], bins=20)
+    ax.set_xlabel("Age")
+    ax.set_ylabel("Frequency")
+    ax.set_title("Age Distribution")
+    st.pyplot(fig)
 
 # BMI HISTOGRAM
 with col2:
-    st.write("BMI Distribution")
-    hist_values = np.histogram(filtered_df["bmi"].dropna(), bins=20)[0]
-    st.bar_chart(hist_values)
+    fig, ax = plt.subplots()
+    ax.hist(filtered_df["bmi"].dropna(), bins=20)
+    ax.set_xlabel("BMI")
+    ax.set_ylabel("Frequency")
+    ax.set_title("BMI Distribution")
+    st.pyplot(fig)
 
 # GLUCOSE HISTOGRAM
 with col3:
-    st.write("Glucose Level Distribution")
-    hist_values = np.histogram(filtered_df["avg_glucose_level"], bins=20)[0]
-    st.bar_chart(hist_values)
-
+    fig, ax = plt.subplots()
+    ax.hist(filtered_df["avg_glucose_level"], bins=20)
+    ax.set_xlabel("Glucose Level")
+    ax.set_ylabel("Frequency")
+    ax.set_title("Glucose Distribution")
+    st.pyplot(fig)
 # =========================
 # HEALTH ANALYSIS
 # =========================
