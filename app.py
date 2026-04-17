@@ -36,7 +36,7 @@ st.markdown("""
 st.markdown("---")
 
 # -------------------------------------------------
-# LOAD DATA (CACHED)
+# LOAD DATA
 # -------------------------------------------------
 @st.cache_data
 def load_data():
@@ -45,12 +45,20 @@ def load_data():
 df = load_data()
 
 # -------------------------------------------------
+# FIX CATEGORICAL VALUES (IMPORTANT ✅)
+# -------------------------------------------------
+df["gender"] = df["gender"].replace({0: "Female", 1: "Male"})
+df["hypertension"] = df["hypertension"].replace({0: "No", 1: "Yes"})
+df["heart_disease"] = df["heart_disease"].replace({0: "No", 1: "Yes"})
+df["stroke"] = df["stroke"].replace({0: "No", 1: "Yes"})
+
+# -------------------------------------------------
 # SIDEBAR FILTERS
 # -------------------------------------------------
 st.sidebar.header("🔎 Filters")
 
 def safe_unique(col):
-    return sorted([x for x in df[col].dropna().unique()])
+    return sorted([str(x) for x in df[col].dropna().unique()])
 
 gender = st.sidebar.selectbox("Gender", ["All"] + safe_unique("gender"))
 smoking = st.sidebar.selectbox("Smoking", ["All"] + safe_unique("smoking_status"))
@@ -76,17 +84,17 @@ bmi_range = st.sidebar.slider(
 filtered_df = df.copy()
 
 if gender != "All":
-    filtered_df = filtered_df[filtered_df.gender == gender]
+    filtered_df = filtered_df[filtered_df["gender"] == gender]
 
 if smoking != "All":
-    filtered_df = filtered_df[filtered_df.smoking_status == smoking]
+    filtered_df = filtered_df[filtered_df["smoking_status"] == smoking]
 
 if work != "All":
-    filtered_df = filtered_df[filtered_df.work_type == work]
+    filtered_df = filtered_df[filtered_df["work_type"] == work]
 
 filtered_df = filtered_df[
-    filtered_df.age.between(*age_range) &
-    filtered_df.bmi.between(*bmi_range)
+    filtered_df["age"].between(*age_range) &
+    filtered_df["bmi"].between(*bmi_range)
 ]
 
 # -------------------------------------------------
@@ -97,11 +105,11 @@ st.markdown("## 📌 Key Metrics")
 col1, col2, col3, col4, col5 = st.columns(5)
 
 total = len(filtered_df)
-stroke_cases = filtered_df.stroke.sum()
+stroke_cases = (filtered_df["stroke"] == "Yes").sum()
 
 col1.metric("Patients", total)
-col2.metric("Avg Age", round(filtered_df.age.mean(), 1))
-col3.metric("Avg BMI", round(filtered_df.bmi.mean(), 1))
+col2.metric("Avg Age", round(filtered_df["age"].mean(), 1))
+col3.metric("Avg BMI", round(filtered_df["bmi"].mean(), 1))
 col4.metric("Stroke Cases", int(stroke_cases))
 col5.metric("Stroke Rate (%)", round((stroke_cases / total)*100, 2) if total > 0 else 0)
 
@@ -122,15 +130,15 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.subheader("Gender")
-    percentage_bar(filtered_df.gender)
+    percentage_bar(filtered_df["gender"])
 
 with col2:
     st.subheader("Smoking")
-    percentage_bar(filtered_df.smoking_status)
+    percentage_bar(filtered_df["smoking_status"])
 
 with col3:
     st.subheader("Work Type")
-    percentage_bar(filtered_df.work_type)
+    percentage_bar(filtered_df["work_type"])
 
 st.markdown("---")
 
@@ -156,15 +164,15 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.subheader("Age")
-    histogram(filtered_df.age)
+    histogram(filtered_df["age"])
 
 with col2:
     st.subheader("BMI")
-    histogram(filtered_df.bmi)
+    histogram(filtered_df["bmi"])
 
 with col3:
     st.subheader("Glucose")
-    histogram(filtered_df.avg_glucose_level)
+    histogram(filtered_df["avg_glucose_level"])
 
 st.markdown("---")
 
@@ -177,11 +185,11 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Hypertension")
-    st.bar_chart(pd.crosstab(filtered_df.hypertension, filtered_df.stroke))
+    st.bar_chart(pd.crosstab(filtered_df["hypertension"], filtered_df["stroke"]))
 
 with col2:
     st.subheader("Heart Disease")
-    st.bar_chart(pd.crosstab(filtered_df.heart_disease, filtered_df.stroke))
+    st.bar_chart(pd.crosstab(filtered_df["heart_disease"], filtered_df["stroke"]))
 
 st.markdown("---")
 
@@ -196,7 +204,7 @@ st.line_chart(age_glucose)
 st.markdown("---")
 
 # -------------------------------------------------
-# CORRELATION MATRIX (FIXED ✅)
+# CORRELATION MATRIX (SAFE VERSION ✅)
 # -------------------------------------------------
 st.markdown("## 🔗 Correlation Matrix")
 
@@ -206,9 +214,9 @@ corr = numeric_df.corr()
 st.dataframe(corr, use_container_width=True)
 
 st.write("💡 Interpretation:")
-st.write("• Values close to 1 → strong positive correlation")
-st.write("• Values close to -1 → strong negative correlation")
-st.write("• Values near 0 → weak or no relationship")
+st.write("• Close to 1 → strong positive relation")
+st.write("• Close to -1 → strong negative relation")
+st.write("• Close to 0 → weak relation")
 
 st.markdown("---")
 
