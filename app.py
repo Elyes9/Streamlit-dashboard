@@ -108,15 +108,15 @@ col5.metric("Stroke Rate (%)", round((stroke_cases / total)*100, 2) if total > 0
 st.markdown("---")
 
 # -------------------------------------------------
-# DISTRIBUTIONS (WITH %)
+# DISTRIBUTIONS
 # -------------------------------------------------
 st.markdown("## 📊 Population Overview")
 
 def percentage_bar(series):
     counts = series.value_counts()
     percent = (counts / counts.sum()) * 100
-    df_plot = pd.DataFrame({"Count": counts, "Percent": percent})
-    st.bar_chart(df_plot["Percent"])
+    df_plot = pd.DataFrame({"Percent": percent})
+    st.bar_chart(df_plot)
 
 col1, col2, col3 = st.columns(3)
 
@@ -137,10 +137,8 @@ st.markdown("---")
 # -------------------------------------------------
 # HISTOGRAM FUNCTION
 # -------------------------------------------------
-def histogram(data, bins=20, normalize=False):
+def histogram(data, bins=20):
     hist, bins = np.histogram(data.dropna(), bins=bins)
-    if normalize:
-        hist = hist / hist.sum()
 
     df_hist = pd.DataFrame({
         "Value": bins[:-1],
@@ -198,16 +196,19 @@ st.line_chart(age_glucose)
 st.markdown("---")
 
 # -------------------------------------------------
-# CORRELATION MATRIX (IMPROVED)
+# CORRELATION MATRIX (FIXED ✅)
 # -------------------------------------------------
 st.markdown("## 🔗 Correlation Matrix")
 
 numeric_df = filtered_df.select_dtypes(include=["int64", "float64"])
 corr = numeric_df.corr()
 
-st.dataframe(
-    corr.style.background_gradient(cmap="viridis")
-)
+st.dataframe(corr, use_container_width=True)
+
+st.write("💡 Interpretation:")
+st.write("• Values close to 1 → strong positive correlation")
+st.write("• Values close to -1 → strong negative correlation")
+st.write("• Values near 0 → weak or no relationship")
 
 st.markdown("---")
 
