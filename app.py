@@ -440,8 +440,7 @@ with tab3:
         st.altair_chart(ch_box, use_container_width=True)
 
     with c2:
-        age_mean = fdf.groupby("age")[chosen].mean().reset_index()
-        age_mean.columns = ["age","mean_val"]
+        age_mean = fdf.groupby("age")[chosen].mean().rename("mean_val").reset_index()
         line = alt.Chart(age_mean, title=f"Mean {metric} by Age").mark_line(
             strokeWidth=2.5, color="#FBBF24"
         ).encode(
@@ -461,8 +460,7 @@ with tab3:
     # Glucose trend full-width
     st.markdown("<div class='section-header'>Mean Glucose Level Across Age</div>",
                 unsafe_allow_html=True)
-    agl = fdf.groupby("age")["avg_glucose_level"].mean().reset_index()
-    agl.columns = ["age","Avg Glucose"]
+    agl = fdf.groupby("age")["avg_glucose_level"].mean().rename("Avg Glucose").reset_index()
 
     trend_line = alt.Chart(agl).mark_line(strokeWidth=2.5, color="#FBBF24").encode(
         x=alt.X("age:Q", title="Age"),
