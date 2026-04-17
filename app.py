@@ -5,218 +5,215 @@ import numpy as np
 # -------------------------------------------------
 # PAGE CONFIG
 # -------------------------------------------------
-
 st.set_page_config(page_title="Stroke Dashboard", layout="wide")
 
 # -------------------------------------------------
-# CUSTOM STYLE
+# STYLE
 # -------------------------------------------------
-
 st.markdown("""
 <style>
-
-.main {
-    background-color: #0E1117;
-}
-
-h1, h2, h3 {
-    color: #4CAF50;
-}
+.main {background-color: #0E1117;}
+h1, h2, h3 {color: #4CAF50;}
 
 [data-testid="metric-container"] {
     background-color: #1c1f26;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 15px;
     border: 1px solid #2d3139;
+    text-align: center;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------
 # TITLE
 # -------------------------------------------------
-
 st.markdown("""
-<h1 style='text-align: center;'>
-🧠 Stroke Dataset Analysis Dashboard
-</h1>
-<p style='text-align: center; font-size:18px;'>
-Interactive dashboard for exploring stroke dataset characteristics
-</p>
+<h1 style='text-align: center;'>🧠 Stroke Dashboard</h1>
+<p style='text-align: center;'>Advanced Interactive Analysis</p>
 """, unsafe_allow_html=True)
 
 st.markdown("---")
 
 # -------------------------------------------------
-# LOAD DATA
+# LOAD DATA (CACHED)
 # -------------------------------------------------
+@st.cache_data
+def load_data():
+    return pd.read_csv("Cleaned_DataSet_Stroke.csv")
 
-df = pd.read_csv("Cleaned_DataSet_Stroke.csv")
+df = load_data()
 
 # -------------------------------------------------
 # SIDEBAR FILTERS
 # -------------------------------------------------
+st.sidebar.header("🔎 Filters")
 
-st.sidebar.header("Filters")
+def safe_unique(col):
+    return sorted([x for x in df[col].dropna().unique()])
 
-gender = st.sidebar.selectbox("Gender", ["All"] + list(df["gender"].unique()))
-smoking = st.sidebar.selectbox("Smoking Status", ["All"] + list(df["smoking_status"].unique()))
-work = st.sidebar.selectbox("Work Type", ["All"] + list(df["work_type"].unique()))
+gender = st.sidebar.selectbox("Gender", ["All"] + safe_unique("gender"))
+smoking = st.sidebar.selectbox("Smoking", ["All"] + safe_unique("smoking_status"))
+work = st.sidebar.selectbox("Work Type", ["All"] + safe_unique("work_type"))
 
 age_range = st.sidebar.slider(
-    "Age Range",
-    int(df["age"].min()),
-    int(df["age"].max()),
+    "Age",
+    int(df.age.min()),
+    int(df.age.max()),
     (20, 80)
 )
 
 bmi_range = st.sidebar.slider(
-    "BMI Range",
-    int(df["bmi"].min()),
-    int(df["bmi"].max()),
+    "BMI",
+    int(df.bmi.min()),
+    int(df.bmi.max()),
     (15, 40)
 )
 
+# -------------------------------------------------
+# FILTER DATA
+# -------------------------------------------------
 filtered_df = df.copy()
 
 if gender != "All":
-    filtered_df = filtered_df[filtered_df["gender"] == gender]
+    filtered_df = filtered_df[filtered_df.gender == gender]
 
 if smoking != "All":
-    filtered_df = filtered_df[filtered_df["smoking_status"] == smoking]
+    filtered_df = filtered_df[filtered_df.smoking_status == smoking]
 
 if work != "All":
-    filtered_df = filtered_df[filtered_df["work_type"] == work]
+    filtered_df = filtered_df[filtered_df.work_type == work]
 
 filtered_df = filtered_df[
-    (filtered_df["age"].between(age_range[0], age_range[1])) &
-    (filtered_df["bmi"].between(bmi_range[0], bmi_range[1]))
+    filtered_df.age.between(*age_range) &
+    filtered_df.bmi.between(*bmi_range)
 ]
 
 # -------------------------------------------------
-# KPI METRICS
+# KPI SECTION
 # -------------------------------------------------
+st.markdown("## 📌 Key Metrics")
 
-st.markdown("## 📌 Key Indicators")
+col1, col2, col3, col4, col5 = st.columns(5)
 
-col1, col2, col3, col4 = st.columns(4)
+total = len(filtered_df)
+stroke_cases = filtered_df.stroke.sum()
 
-col1.metric("Total Patients", len(filtered_df))
-col2.metric("Average Age", round(filtered_df["age"].mean(),1))
-col3.metric("Average BMI", round(filtered_df["bmi"].mean(),1))
-col4.metric("Stroke Cases", int(filtered_df["stroke"].sum()))
+col1.metric("Patients", total)
+col2.metric("Avg Age", round(filtered_df.age.mean(), 1))
+col3.metric("Avg BMI", round(filtered_df.bmi.mean(), 1))
+col4.metric("Stroke Cases", int(stroke_cases))
+col5.metric("Stroke Rate (%)", round((stroke_cases / total)*100, 2) if total > 0 else 0)
 
 st.markdown("---")
 
 # -------------------------------------------------
-# CATEGORY DISTRIBUTIONS
+# DISTRIBUTIONS (WITH %)
 # -------------------------------------------------
-
 st.markdown("## 📊 Population Overview")
+
+def percentage_bar(series):
+    counts = series.value_counts()
+    percent = (counts / counts.sum()) * 100
+    df_plot = pd.DataFrame({"Count": counts, "Percent": percent})
+    st.bar_chart(df_plot["Percent"])
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.write("Gender Distribution")
-    st.bar_chart(filtered_df["gender"].value_counts())
+    st.subheader("Gender")
+    percentage_bar(filtered_df.gender)
 
 with col2:
-    st.write("Smoking Status")
-    st.bar_chart(filtered_df["smoking_status"].value_counts())
+    st.subheader("Smoking")
+    percentage_bar(filtered_df.smoking_status)
 
 with col3:
-    st.write("Work Type")
-    st.bar_chart(filtered_df["work_type"].value_counts())
+    st.subheader("Work Type")
+    percentage_bar(filtered_df.work_type)
 
 st.markdown("---")
 
 # -------------------------------------------------
 # HISTOGRAM FUNCTION
 # -------------------------------------------------
+def histogram(data, bins=20, normalize=False):
+    hist, bins = np.histogram(data.dropna(), bins=bins)
+    if normalize:
+        hist = hist / hist.sum()
 
-def histogram_chart(data, bins=20):
-
-    hist, bin_edges = np.histogram(data.dropna(), bins=bins)
-
-    histogram_df = pd.DataFrame({
-        "Value": bin_edges[:-1],
+    df_hist = pd.DataFrame({
+        "Value": bins[:-1],
         "Frequency": hist
-    })
+    }).set_index("Value")
 
-    histogram_df = histogram_df.set_index("Value")
-
-    st.bar_chart(histogram_df)
+    st.bar_chart(df_hist)
 
 # -------------------------------------------------
 # HISTOGRAMS
 # -------------------------------------------------
-
-st.markdown("## 🏥 Health Metrics Distribution")
+st.markdown("## 🏥 Health Distributions")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.write("Age Distribution")
-    histogram_chart(filtered_df["age"])
+    st.subheader("Age")
+    histogram(filtered_df.age)
 
 with col2:
-    st.write("BMI Distribution")
-    histogram_chart(filtered_df["bmi"])
+    st.subheader("BMI")
+    histogram(filtered_df.bmi)
 
 with col3:
-    st.write("Glucose Level Distribution")
-    histogram_chart(filtered_df["avg_glucose_level"])
+    st.subheader("Glucose")
+    histogram(filtered_df.avg_glucose_level)
 
 st.markdown("---")
 
 # -------------------------------------------------
 # HEALTH FACTORS
 # -------------------------------------------------
-
-st.markdown("## ❤️ Health Risk Factors")
+st.markdown("## ❤️ Risk Factors vs Stroke")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    st.write("Hypertension vs Stroke")
-    st.bar_chart(pd.crosstab(filtered_df["hypertension"], filtered_df["stroke"]))
+    st.subheader("Hypertension")
+    st.bar_chart(pd.crosstab(filtered_df.hypertension, filtered_df.stroke))
 
 with col2:
-    st.write("Heart Disease vs Stroke")
-    st.bar_chart(pd.crosstab(filtered_df["heart_disease"], filtered_df["stroke"]))
+    st.subheader("Heart Disease")
+    st.bar_chart(pd.crosstab(filtered_df.heart_disease, filtered_df.stroke))
 
 st.markdown("---")
 
 # -------------------------------------------------
 # AGE VS GLUCOSE
 # -------------------------------------------------
-
-st.markdown("## 📈 Average Glucose by Age")
+st.markdown("## 📈 Glucose Trend by Age")
 
 age_glucose = filtered_df.groupby("age")["avg_glucose_level"].mean()
-
 st.line_chart(age_glucose)
 
 st.markdown("---")
 
 # -------------------------------------------------
-# CORRELATION MATRIX
+# CORRELATION MATRIX (IMPROVED)
 # -------------------------------------------------
-
 st.markdown("## 🔗 Correlation Matrix")
 
-numeric_df = filtered_df.select_dtypes(include=["int64","float64"])
+numeric_df = filtered_df.select_dtypes(include=["int64", "float64"])
 corr = numeric_df.corr()
 
-st.dataframe(corr)
+st.dataframe(
+    corr.style.background_gradient(cmap="viridis")
+)
 
 st.markdown("---")
 
 # -------------------------------------------------
 # DATA PREVIEW
 # -------------------------------------------------
+st.markdown("## 🔎 Data Preview")
 
-st.markdown("## 🔎 Dataset Preview")
-
-st.dataframe(filtered_df.head(20))
+st.dataframe(filtered_df.head(20), use_container_width=True)
