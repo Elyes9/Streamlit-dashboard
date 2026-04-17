@@ -45,12 +45,43 @@ def load_data():
 df = load_data()
 
 # -------------------------------------------------
-# FIX CATEGORICAL VALUES (IMPORTANT ✅)
+# CLEAN DATA (ALL CATEGORICAL FIXES ✅)
 # -------------------------------------------------
-df["gender"] = df["gender"].replace({0: "Female", 1: "Male"})
+
+# Convert to string (safety)
+df["gender"] = df["gender"].astype(str).str.strip()
+df["smoking_status"] = df["smoking_status"].astype(str).str.strip()
+df["work_type"] = df["work_type"].astype(str).str.strip()
+
+# Gender
+df["gender"] = df["gender"].replace({
+    "0": "Female", "1": "Male",
+    0: "Female", 1: "Male"
+})
+
+# Health flags
 df["hypertension"] = df["hypertension"].replace({0: "No", 1: "Yes"})
 df["heart_disease"] = df["heart_disease"].replace({0: "No", 1: "Yes"})
 df["stroke"] = df["stroke"].replace({0: "No", 1: "Yes"})
+
+# Smoking
+df["smoking_status"] = df["smoking_status"].replace({
+    "never smoked": "Never Smoked",
+    "formerly smoked": "Former Smoker",
+    "smokes": "Smoker",
+    "Unknown": "Unknown",
+    "0": "Unknown",
+    0: "Unknown"
+})
+
+# Work type
+df["work_type"] = df["work_type"].replace({
+    "Private": "Private Sector",
+    "Self-employed": "Self Employed",
+    "Govt_job": "Government Job",
+    "children": "Children",
+    "Never_worked": "Never Worked"
+})
 
 # -------------------------------------------------
 # SIDEBAR FILTERS
@@ -58,11 +89,11 @@ df["stroke"] = df["stroke"].replace({0: "No", 1: "Yes"})
 st.sidebar.header("🔎 Filters")
 
 def safe_unique(col):
-    return sorted([str(x) for x in df[col].dropna().unique()])
+    return sorted(df[col].dropna().unique())
 
-gender = st.sidebar.selectbox("Gender", ["All"] + safe_unique("gender"))
-smoking = st.sidebar.selectbox("Smoking", ["All"] + safe_unique("smoking_status"))
-work = st.sidebar.selectbox("Work Type", ["All"] + safe_unique("work_type"))
+gender = st.sidebar.selectbox("Gender", ["All"] + list(safe_unique("gender")))
+smoking = st.sidebar.selectbox("Smoking", ["All"] + list(safe_unique("smoking_status")))
+work = st.sidebar.selectbox("Work Type", ["All"] + list(safe_unique("work_type")))
 
 age_range = st.sidebar.slider(
     "Age",
@@ -143,21 +174,16 @@ with col3:
 st.markdown("---")
 
 # -------------------------------------------------
-# HISTOGRAM FUNCTION
+# HISTOGRAMS
 # -------------------------------------------------
 def histogram(data, bins=20):
     hist, bins = np.histogram(data.dropna(), bins=bins)
-
     df_hist = pd.DataFrame({
         "Value": bins[:-1],
         "Frequency": hist
     }).set_index("Value")
-
     st.bar_chart(df_hist)
 
-# -------------------------------------------------
-# HISTOGRAMS
-# -------------------------------------------------
 st.markdown("## 🏥 Health Distributions")
 
 col1, col2, col3 = st.columns(3)
@@ -204,7 +230,7 @@ st.line_chart(age_glucose)
 st.markdown("---")
 
 # -------------------------------------------------
-# CORRELATION MATRIX (SAFE VERSION ✅)
+# CORRELATION MATRIX
 # -------------------------------------------------
 st.markdown("## 🔗 Correlation Matrix")
 
