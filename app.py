@@ -45,39 +45,43 @@ def load_data():
 df = load_data()
 
 # -------------------------------------------------
-# 🔥 ROBUST CLEANING (FINAL FIX)
+# CLEAN DATA (ALL CATEGORICAL FIXES ✅)
 # -------------------------------------------------
 
-# -------- GENDER --------
-df["gender"] = pd.to_numeric(df["gender"], errors="coerce")
-df["gender"] = df["gender"].map({0: "Female", 1: "Male"})
+# Convert to string (safety)
+df["gender"] = df["gender"].astype(str).str.strip()
+df["smoking_status"] = df["smoking_status"].astype(str).str.strip()
+df["work_type"] = df["work_type"].astype(str).str.strip()
 
-# -------- HEALTH FLAGS --------
-for col in ["hypertension", "heart_disease", "stroke"]:
-    df[col] = pd.to_numeric(df[col], errors="coerce")
-    df[col] = df[col].map({0: "No", 1: "Yes"})
+# Gender
+df["gender"] = df["gender"].replace({
+    "0": "Female", "1": "Male",
+    0: "Female", 1: "Male"
+})
 
-# -------- SMOKING --------
-df["smoking_status"] = df["smoking_status"].astype(str).str.strip().str.lower()
-df["smoking_status"] = df["smoking_status"].map({
+# Health flags
+df["hypertension"] = df["hypertension"].replace({0: "No", 1: "Yes"})
+df["heart_disease"] = df["heart_disease"].replace({0: "No", 1: "Yes"})
+df["stroke"] = df["stroke"].replace({0: "No", 1: "Yes"})
+
+# Smoking
+df["smoking_status"] = df["smoking_status"].replace({
     "never smoked": "Never Smoked",
     "formerly smoked": "Former Smoker",
     "smokes": "Smoker",
-    "unknown": "Unknown"
+    "Unknown": "Unknown",
+    "0": "Unknown",
+    0: "Unknown"
 })
 
-# -------- WORK TYPE --------
-df["work_type"] = df["work_type"].astype(str).str.strip()
-df["work_type"] = df["work_type"].map({
+# Work type
+df["work_type"] = df["work_type"].replace({
     "Private": "Private Sector",
     "Self-employed": "Self Employed",
     "Govt_job": "Government Job",
     "children": "Children",
     "Never_worked": "Never Worked"
 })
-
-# Remove rows with invalid categories
-df = df.dropna(subset=["gender", "smoking_status", "work_type"])
 
 # -------------------------------------------------
 # SIDEBAR FILTERS
@@ -125,7 +129,7 @@ filtered_df = filtered_df[
 ]
 
 # -------------------------------------------------
-# KPI
+# KPI SECTION
 # -------------------------------------------------
 st.markdown("## 📌 Key Metrics")
 
@@ -150,7 +154,8 @@ st.markdown("## 📊 Population Overview")
 def percentage_bar(series):
     counts = series.value_counts()
     percent = (counts / counts.sum()) * 100
-    st.bar_chart(percent)
+    df_plot = pd.DataFrame({"Percent": percent})
+    st.bar_chart(df_plot)
 
 col1, col2, col3 = st.columns(3)
 
@@ -173,7 +178,10 @@ st.markdown("---")
 # -------------------------------------------------
 def histogram(data, bins=20):
     hist, bins = np.histogram(data.dropna(), bins=bins)
-    df_hist = pd.DataFrame({"Value": bins[:-1], "Freq": hist}).set_index("Value")
+    df_hist = pd.DataFrame({
+        "Value": bins[:-1],
+        "Frequency": hist
+    }).set_index("Value")
     st.bar_chart(df_hist)
 
 st.markdown("## 🏥 Health Distributions")
@@ -195,7 +203,7 @@ with col3:
 st.markdown("---")
 
 # -------------------------------------------------
-# RISK FACTORS
+# HEALTH FACTORS
 # -------------------------------------------------
 st.markdown("## ❤️ Risk Factors vs Stroke")
 
@@ -212,17 +220,17 @@ with col2:
 st.markdown("---")
 
 # -------------------------------------------------
-# TREND
+# AGE VS GLUCOSE
 # -------------------------------------------------
 st.markdown("## 📈 Glucose Trend by Age")
 
-trend = filtered_df.groupby("age")["avg_glucose_level"].mean()
-st.line_chart(trend)
+age_glucose = filtered_df.groupby("age")["avg_glucose_level"].mean()
+st.line_chart(age_glucose)
 
 st.markdown("---")
 
 # -------------------------------------------------
-# CORRELATION
+# CORRELATION MATRIX
 # -------------------------------------------------
 st.markdown("## 🔗 Correlation Matrix")
 
@@ -231,10 +239,16 @@ corr = numeric_df.corr()
 
 st.dataframe(corr, use_container_width=True)
 
+st.write("💡 Interpretation:")
+st.write("• Close to 1 → strong positive relation")
+st.write("• Close to -1 → strong negative relation")
+st.write("• Close to 0 → weak relation")
+
 st.markdown("---")
 
 # -------------------------------------------------
 # DATA PREVIEW
 # -------------------------------------------------
 st.markdown("## 🔎 Data Preview")
+
 st.dataframe(filtered_df.head(20), use_container_width=True)
