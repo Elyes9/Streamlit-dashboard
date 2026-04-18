@@ -157,21 +157,53 @@ def clean_data(raw_bytes):
     import io
     df = pd.read_csv(io.BytesIO(raw_bytes))
 
-    for c in ["gender","smoking_status","work_type"]:
-        df[c] = df[c].astype(str).str.strip()
+    # Force all categoricals to string first
+    for c in ["gender","smoking_status","work_type","hypertension","heart_disease","stroke"]:
+        if c in df.columns:
+            df[c] = df[c].astype(str).str.strip()
 
-    df["gender"] = df["gender"].replace(
-        {"0":"Female","1":"Male",0:"Female",1:"Male"})
-    df["hypertension"]  = df["hypertension"].replace({0:"No",  1:"Yes"})
-    df["heart_disease"] = df["heart_disease"].replace({0:"No", 1:"Yes"})
-    df["stroke"]        = df["stroke"].replace({0:"No Stroke",1:"Stroke"})
+    # Gender
+    df["gender"] = df["gender"].replace({
+        "0":"Female","1":"Male","2":"Other",
+        "f":"Female","m":"Male","F":"Female","M":"Male",
+        "female":"Female","male":"Male","nan":"Unknown",
+    })
 
+    # Binary flags
+    for col in ["hypertension","heart_disease"]:
+        df[col] = df[col].replace({
+            "0":"No","1":"Yes","no":"No","yes":"Yes",
+            "No":"No","Yes":"Yes","nan":"Unknown",
+        })
+
+    # Stroke
+    df["stroke"] = df["stroke"].replace({
+        "0":"No Stroke","1":"Stroke",
+        "no stroke":"No Stroke","stroke":"Stroke",
+        "No Stroke":"No Stroke","Stroke":"Stroke","nan":"Unknown",
+    })
+
+    # Smoking status
     df["smoking_status"] = df["smoking_status"].replace({
+        "0":"Unknown","1":"Never Smoked","2":"Former Smoker","3":"Smoker",
         "never smoked":"Never Smoked","formerly smoked":"Former Smoker",
-        "smokes":"Smoker","Unknown":"Unknown","0":"Unknown",0:"Unknown"})
+        "former smoker":"Former Smoker","smokes":"Smoker","smoker":"Smoker",
+        "Unknown":"Unknown","unknown":"Unknown","nan":"Unknown",
+    })
+
+    # Work type
     df["work_type"] = df["work_type"].replace({
-        "Private":"Private Sector","Self-employed":"Self Employed",
-        "Govt_job":"Government Job","children":"Children","Never_worked":"Never Worked"})
+        "0":"Never Worked","1":"Children","2":"Government Job",
+        "3":"Private Sector","4":"Self Employed",
+        "Private":"Private Sector","private":"Private Sector",
+        "Self-employed":"Self Employed","self-employed":"Self Employed",
+        "self_employed":"Self Employed",
+        "Govt_job":"Government Job","govt_job":"Government Job",
+        "government":"Government Job",
+        "children":"Children",
+        "Never_worked":"Never Worked","never_worked":"Never Worked",
+        "nan":"Unknown",
+    })
 
     df["bmi"] = df["bmi"].fillna(df["bmi"].mean())
     df["high_glucose"] = (df["avg_glucose_level"] > 140).map(
