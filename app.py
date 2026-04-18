@@ -195,7 +195,11 @@ STROKE_SCALE = alt.Scale(domain=["No Stroke","Stroke"], range=[NO_STROKE_COLOR, 
 # ─────────────────────────────────────────────────────────────────────────────
 def smooth_line(df, x_col, y_col, window=5):
     """Return a DataFrame with a rolling-smoothed y column, sorted by x."""
-    tmp = df.groupby(x_col)[y_col].mean().reset_index().sort_values(x_col)
+    tmp = (df.groupby(x_col)[y_col]
+             .mean()
+             .rename(y_col)          # keep series name explicit before reset_index
+             .reset_index(name=y_col)
+             .sort_values(x_col))
     tmp[y_col] = tmp[y_col].rolling(window=window, center=True, min_periods=1).mean()
     return tmp
 
